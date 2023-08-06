@@ -2,6 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum PlayerAnimation
+{
+    Idle,
+    Walk,
+    Run,
+    Jump,
+    Fall,
+    Ladder,
+    LadderClimbUp,
+    LadderClimbDown,
+    LadderStationary
+}
+
 public class Player : MonoBehaviour
 {
     [SerializeField] CharacterController controller;
@@ -9,6 +22,15 @@ public class Player : MonoBehaviour
     float turnVelocity;
     float turnTime = 0.1f;
     [SerializeField] Transform cam;
+    [SerializeField] Animator animator;
+    private bool isGrounded;
+    [SerializeField] float jumpForce = 9.0f;
+    private float gravity = -9.81f;
+    private Vector3 velocity;
+    private bool isJumping = false;
+    private bool isSprinting = false;
+    private bool isClimbing = false;
+    [SerializeField] PlayerAnimation[] playerAnimation;
 
     private void Start()
     {
@@ -25,11 +47,20 @@ public class Player : MonoBehaviour
 
     private void PlayerMovement()
     {
+        if (isClimbing)
+        {
+            ClimbLadder();
+            return;
+        }
+
+        isGrounded = controller.isGrounded;
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
+        // Only update rotation when there is movement input
         if (direction.magnitude >= 0.1f)
         {
             var playerRotation = GetPlayerRotation(direction);
@@ -39,8 +70,74 @@ public class Player : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+
+            float currentSpeed = isSprinting ? speed * speed : speed;
+
+            controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
+
+            ChangeAnimation(new int[] { 1 });
         }
+        else
+        {
+            ChangeAnimation(new int[] { 0 });
+        }
+
+        Sprinting();
+
+        Grounded();
+
+        Gravity();
+    }
+
+    private void Sprinting()
+    {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            isSprinting = true;
+            ChangeAnimation(new int[] { 2 });
+        }
+        else
+        {
+            isSprinting = false;
+        }
+    }
+
+    private void Grounded()
+    {
+        if (isGrounded)
+        {
+            velocity.y = -2f;
+            if (Input.GetButtonDown("Jump"))
+            {
+                isJumping = true;
+                velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+                ChangeAnimation(new int[] { 3 });
+            }
+            isJumping = false;
+        }
+        else
+        {
+            if (!isJumping)
+            {
+                ChangeAnimation(new int[] { 4 });
+            }
+        }
+    }
+
+    private void Gravity()
+    {
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void ClimbLadder()
+    {
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 climbDirection = new Vector3(0f, vertical, 0f);
+
+        float climbSpeed = 6.0f;
+
+        controller.Move(climbDirection * climbSpeed * Time.deltaTime);
     }
 
     private ReturnAngle GetPlayerRotation(Vector3 direction)
@@ -50,6 +147,55 @@ public class Player : MonoBehaviour
 
         return new ReturnAngle { targetAngle = targetAngle, refinedAngle = angle };
     }
+
+    private void ChangeAnimation(int[] arr)
+    {
+        for (int i = 0; i < playerAnimation.Length; i++)
+        {
+            foreach (int j in arr)
+            {
+                if (i == j)
+                {
+                    animator.SetBool(playerAnimation[i].ToString(), true);
+                }
+                else
+                {
+                    animator.SetBool(playerAnimation[i].ToString(), false);
+                }
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Ladder"))
+        {
+            isClimbing = true;
+            // Disable gravity and reset velocity when entering ladder
+            gravity = 0f;
+            velocity.y = 0f;
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Ladder"))
+        {
+            if(isClimbing)
+                ChangeAnimation(new int[] { 5 });
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Ladder"))
+        {
+            isClimbing = false;
+            // Restore gravity when leaving ladder
+            gravity = -9.81f;
+        }
+    }
+
 }
 
 [System.Serializable]
