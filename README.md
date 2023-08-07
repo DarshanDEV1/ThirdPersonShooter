@@ -4,7 +4,7 @@ This repository contains the project file of the TPS game. This game is created 
 # INPUT SYSTEM
 
 # W, A, S, D -> For Basic Movement
-# Shift + W, A, S, D -> Sprint Movement
+# Left Shift + W, A, S, D -> Sprint Movement
 # E -> HookShot Throw
 # Right Mouse Click -> Cancel HookShot
 # Space bar -> Jump
