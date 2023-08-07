@@ -30,7 +30,7 @@ public class Player : MonoBehaviour
     private bool isClimbing = false;
     [SerializeField] PlayerAnimation[] playerAnimation;
     [SerializeField] GameManager _gameManager;
-    private AudioSource playAudio;
+    public AudioSource playAudio;
 
     private void Start()
     {
@@ -138,12 +138,28 @@ public class Player : MonoBehaviour
 
     private void ClimbLadder()
     {
-        float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 climbDirection = new Vector3(0f, vertical, 0f);
+        if (Input.GetKey(KeyCode.W))
+        {
+            float vertical = Input.GetAxisRaw("Vertical");
+            Vector3 climbDirection = new Vector3(0f, vertical, 0f);
 
-        float climbSpeed = 6.0f;
+            float climbSpeed = 6.0f;
 
-        controller.Move(climbDirection * climbSpeed * Time.deltaTime);
+            controller.Move(climbDirection * climbSpeed * Time.deltaTime);
+        }
+        else if(Input.GetKey(KeyCode.S))
+        {
+            float vertical = Input.GetAxisRaw("Vertical");
+            Vector3 climbDirection = new Vector3(0f, -vertical, 0f);
+
+            float climbSpeed = -6.0f;
+
+            controller.Move(climbDirection * climbSpeed * Time.deltaTime);
+        }
+        else
+        {
+            controller.Move(new Vector3(0, 0, 0).normalized);
+        }
     }
 
     private ReturnAngle GetPlayerRotation(Vector3 direction)

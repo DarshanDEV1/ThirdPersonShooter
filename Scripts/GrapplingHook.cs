@@ -22,6 +22,8 @@ public class GrapplingHook : MonoBehaviour
     [SerializeField] Image ColorFill;
     [SerializeField] Transform hookShotTransform;
     [SerializeField] float hookSize;
+    [SerializeField] GameManager _gameManager;
+    [SerializeField] Player _player;
 
     private void Awake()
     {
@@ -58,8 +60,11 @@ public class GrapplingHook : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E) && hookCool)
         {
-            Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit raycastHit, 80f);
+            Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit raycastHit, 200f);
             //HIT
+            _player.playAudio.clip = _gameManager._audioClips[3];
+            _player.playAudio.Play();
+
             debugPoint.position = raycastHit.point;
             hookShotPosition = raycastHit.point;
             Debug.DrawRay(cam.transform.position, hookShotPosition, Color.yellow);

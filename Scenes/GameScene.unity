@@ -543,6 +543,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 70a53cefdf56ae74da0d6aaae2bb57c3, type: 3}
   - {fileID: 8300000, guid: b7d691e8552e9934b8f3925f35789a23, type: 3}
   - {fileID: 8300000, guid: 7d733af994f267541b9a01db26f8ec26, type: 3}
+  - {fileID: 8300000, guid: fbe09aa47a53db942a7b9bfa666e5cac, type: 3}
   _currentScore: 0
   _terrains:
   - {fileID: 90546509}
@@ -5457,6 +5458,7 @@ MonoBehaviour:
   jumpForce: 8
   playerAnimation: 000000000100000002000000030000000400000005000000
   _gameManager: {fileID: 119330800}
+  playAudio: {fileID: 0}
 --- !u!143 &1451583577
 CharacterController:
   m_ObjectHideFlags: 0
@@ -5649,6 +5651,8 @@ MonoBehaviour:
   ColorFill: {fileID: 1999729519}
   hookShotTransform: {fileID: 1347402374}
   hookSize: 0
+  _gameManager: {fileID: 119330800}
+  _player: {fileID: 1451583576}
 --- !u!1 &1496393649
 GameObject:
   m_ObjectHideFlags: 0
@@ -6535,7 +6539,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1810503334}
-  m_LocalRotation: {x: 0.22975293, y: 0.000000016746094, z: -0.0000000039532173, w: 0.973249}
+  m_LocalRotation: {x: 0.22975293, y: -0.00000001674609, z: 0.0000000039532164, w: 0.973249}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
