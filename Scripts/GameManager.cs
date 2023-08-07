@@ -1,94 +1,111 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System.Collections;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public int width = 256;       // Width of the terrain
+    public int height = 256;      // Height of the terrain
+    public float scale = 20.0f;   // Controls the level of detail
+    public float amplitude = 10f; // Controls the height variation
+    public int octaves = 5;       // Number of noise layers for more natural appearance
+    public float lacunarity = 2f; // Frequency multiplier for each octave
+    public float persistence = 0.5f; // Amplitude multiplier for each octave
+    public Vector2 offset = new Vector2(0, 0); // Offset for noise sampling
 
-    public enum GameState
-    {
-        MainMenu,
-        Playing,
-        Paused,
-        GameOver
-    }
+    public TMP_Text _score_Text;
+    public AudioClip[] _audioClips;
+    public int _currentScore;
+    private AudioSource _audioSource;
 
-    public GameState CurrentGameState { get; private set; } = GameState.MainMenu;
+    [SerializeField] Terrain[] _terrains;
+    [SerializeField] Transform[] _coinSpawnPosition;
+    [SerializeField] GameObject _coinPrefab;
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        _audioSource = GetComponent<AudioSource>();
+        _audioSource.clip = _audioClips[0];
+        _audioSource.Play();
     }
 
     private void Start()
     {
-        // Initialize game settings, load main menu, etc.
-        SetGameState(GameState.MainMenu);
+        GenerateTerrain();
+        SpawnCoinPositions();
     }
 
-    public void StartGame()
+    private void SpawnCoinPositions()
     {
-        SetGameState(GameState.Playing);
-        SceneManager.LoadScene("GameScene"); // Replace with your actual game scene name
-    }
-
-    public void PauseGame()
-    {
-        if (CurrentGameState == GameState.Playing)
-            SetGameState(GameState.Paused);
-    }
-
-    public void ResumeGame()
-    {
-        if (CurrentGameState == GameState.Paused)
-            SetGameState(GameState.Playing);
-    }
-
-    public void EndGame()
-    {
-        SetGameState(GameState.GameOver);
-    }
-
-    public void RestartGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        SetGameState(GameState.Playing);
-    }
-
-    private void SetGameState(GameState newState)
-    {
-        if (CurrentGameState != newState)
+        for (int i = 0; i < _coinSpawnPosition.Length; i++)
         {
-            CurrentGameState = newState;
-            HandleGameStateChange();
+            int x = Random.Range(3, 12);
+            for (int j = 0; j < x; j++)
+            {
+                Vector3 newPosition = new Vector3(_coinSpawnPosition[i].position.x + Random.Range(-50, 50),
+                                                  5f,
+                                                  _coinSpawnPosition[i].position.z + Random.Range(-50, 50));
+                Instantiate(_coinPrefab, newPosition, Quaternion.identity);
+            }
         }
     }
 
-    private void HandleGameStateChange()
+    #region TERRAIN_SECTION
+    void GenerateTerrain()
     {
-        // Perform actions based on the current game state
-        switch (CurrentGameState)
+        foreach (Terrain terrain in _terrains)
         {
-            case GameState.MainMenu:
-                // Handle main menu logic
-                break;
-            case GameState.Playing:
-                // Handle playing logic
-                break;
-            case GameState.Paused:
-                // Handle pause logic
-                break;
-            case GameState.GameOver:
-                // Handle game over logic
-                break;
+            terrain.terrainData = GenerateTerrainMesh(terrain.terrainData);
         }
     }
+
+    TerrainData GenerateTerrainMesh(TerrainData terrainData)
+    {
+        terrainData.heightmapResolution = width + 1;
+        terrainData.size = new Vector3(width, amplitude, height);
+
+        terrainData.SetHeights(0, 0, GenerateHeights());
+
+        return terrainData;
+    }
+
+    float[,] GenerateHeights()
+    {
+        float[,] heights = new float[width, height];
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float xCoord = (float)x / width * scale + offset.x;
+                float yCoord = (float)y / height * scale + offset.y;
+
+                float value = PerlinNoise(xCoord, yCoord);
+                heights[x, y] = value;
+            }
+        }
+
+        return heights;
+    }
+
+    float PerlinNoise(float x, float y)
+    {
+        float frequency = 1;
+        float amplitude = 1;
+        float noiseHeight = 0;
+
+        for (int i = 0; i < octaves; i++)
+        {
+            float sampleX = x * frequency;
+            float sampleY = y * frequency;
+            float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+            noiseHeight += perlinValue * amplitude;
+
+            frequency *= lacunarity;
+            amplitude *= persistence;
+        }
+
+        return noiseHeight;
+    }
+    #endregion
 }

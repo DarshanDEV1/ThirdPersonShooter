@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum PlayerAnimation
 {
@@ -9,10 +10,7 @@ public enum PlayerAnimation
     Run,
     Jump,
     Fall,
-    Ladder,
-    LadderClimbUp,
-    LadderClimbDown,
-    LadderStationary
+    Ladder
 }
 
 public class Player : MonoBehaviour
@@ -31,6 +29,8 @@ public class Player : MonoBehaviour
     private bool isSprinting = false;
     private bool isClimbing = false;
     [SerializeField] PlayerAnimation[] playerAnimation;
+    [SerializeField] GameManager _gameManager;
+    private AudioSource playAudio;
 
     private void Start()
     {
@@ -38,6 +38,8 @@ public class Player : MonoBehaviour
         controller = GetComponent<CharacterController>();
 
         Cursor.lockState = CursorLockMode.Locked;
+
+        playAudio = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -71,7 +73,7 @@ public class Player : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-            float currentSpeed = isSprinting ? speed * speed : speed;
+            float currentSpeed = isSprinting ? (speed * 2) + speed : speed;
 
             controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
 
@@ -110,6 +112,10 @@ public class Player : MonoBehaviour
             if (Input.GetButtonDown("Jump"))
             {
                 isJumping = true;
+
+                playAudio.clip = _gameManager._audioClips[1];
+                playAudio.Play();
+
                 velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
                 ChangeAnimation(new int[] { 3 });
             }
@@ -181,7 +187,7 @@ public class Player : MonoBehaviour
     {
         if (other.CompareTag("Ladder"))
         {
-            if(isClimbing)
+            if (isClimbing)
                 ChangeAnimation(new int[] { 5 });
         }
     }
@@ -193,6 +199,23 @@ public class Player : MonoBehaviour
             isClimbing = false;
             // Restore gravity when leaving ladder
             gravity = -9.81f;
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("DeathZone"))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        else if (collision.collider.CompareTag("Collectables"))
+        {
+            _gameManager._currentScore++;
+            _gameManager._score_Text.text = "Score : " + _gameManager._currentScore.ToString();
+            playAudio.clip = _gameManager._audioClips[2];
+            playAudio.Play();
+            Destroy(collision.collider.gameObject);
         }
     }
 
