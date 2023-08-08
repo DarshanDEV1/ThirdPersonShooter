@@ -11,5 +11,4 @@ This repository contains the project file of the TPS game. This game is created 
 # W + Vertical Red Carpet -> Ladder Climb Up
 # S + Vertical Red Carpet -> Ladder Climb Down
 
-https://github.com/DarshanDEV1/ThirdPersonShooter/assets/86543754/8e3abb55-e9f1-4d01-ae55-dec86a3a5adb
-
+https://drive.google.com/file/d/1DBiqSywshoSyRxqcJeG_2XCyGZqblF7Q/view?usp=sharing
